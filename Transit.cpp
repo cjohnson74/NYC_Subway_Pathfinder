@@ -40,7 +40,7 @@ class Transit {
                 stop_name_map[stop_name] = stop_id;
             }
 
-            // 2. Read stop_times.txt, then calculate and populate route adjacency list map.
+            // 2. Read stop_times.txt, then calculate and populate route adjacency list graph.
             ifstream times_file(filepath_times);
             string stopA_id, stopB_id, stopA_time, stopB_time, stopA_seq, stopB_seq;
             int timeA, timeB, time_total;
@@ -48,7 +48,7 @@ class Transit {
             getline(times_file, junk); // remove first line
 
             while(!times_file.eof()) {
-                // Parsing Explanation: From the way the GTFS file was formatted, each stop has a
+                // Parsing Explanation: From the way the GTFS file is formatted, each stop has a
                 // sequence number. If a stop's seq is exactly +1 greater than the line immediately
                 // before it, that means it is a route (stopA -> stopB), where the previous line is
                 // stopA, and the current line is stopB.
@@ -71,6 +71,8 @@ class Transit {
                     timeA = convertToSeconds(stopA_time);
                     timeB = convertToSeconds(stopB_time);
                     time_total = timeB - timeA;
+
+                    // TODO: possible bug if timeA is before midnight and timeB is after (negative time_total)
 
                     insertRoute(stopA_id, stopB_id, time_total); 
                 }
@@ -115,15 +117,13 @@ class Transit {
             return stop_name_map[stop_name];
         }
 
-        // TODO: Dijksta's Shortest Path Algorithm
-        // Determines shortest route, prints stops, prints time to perform calculation.
-        // vector<Stop> shortest_path_dijksta(Stop stopA, Stop stopB) {
 
-        // }
+        // TODO: Dijksta's Shortest Path Algorithm
+        // Determines shortest route, then prints route and the time to perform the algorithm.
+        // void shortest_path_dijksta(string& stopA, string& stopB) { }
+
 
         // TODO: A* Search Shortest Path Algorithm
-        // Determines shortest route, prints stops, prints time to perform calculation.
-        // vector<Stop> shortest_path_a_star(Stop stopA, Stop stopB) {
-
-        // }
+        // Determines shortest route, then prints route and the time to perform the algorithm.
+        // void shortest_path_a_star(string& stopA, string& stopB) { }
 };

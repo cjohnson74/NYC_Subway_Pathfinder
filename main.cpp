@@ -29,9 +29,6 @@ name (string) => stop_id (string)
 5. CLI menu
 This will remain rooted in the main function.
 
-Hierarchy:
-main (CLI) -> Transit -> Map#1/Map#2
-
 */
 
 #include "Transit.cpp"
@@ -43,7 +40,6 @@ int main() {
     Transit transit(STOPS_FILE, STOP_TIMES_FILE);
 
     // TODO: CLI menu
-
 
     return 0;
 }
