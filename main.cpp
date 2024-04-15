@@ -5,10 +5,12 @@ Design Decisions:
 input read from .txt file in GTFS format (eg. https://gtfs.org/schedule/reference/#stopstxt)
 
 1. Map #1: Routes represented as an Adjacency List Data Structure
-Transit System => map<string, vector<pair<string, int>>>
+Transit System => map<string, set<pair<string, int>>>
 Stops => string (stop_id)
 Route Time => int (seconds)
-- chosen for ideal time and space efficiency
+- Chosen for ideal time and space efficiency
+- Set was chosen over vector to avoid duplicates in added routes, a set fixes this elegantly.
+  The reasoning is explained in more detail in Transit.cpp -> insertRoute()
 
 2. Map #2: Stops data (stop_id, name)
 stop_id (string) => name (string)
@@ -40,7 +42,7 @@ int main() {
 
     Transit transit(STOPS_FILE, STOP_TIMES_FILE);
 
-    // TODO: CLI
+    // TODO: CLI menu
 
 
     return 0;

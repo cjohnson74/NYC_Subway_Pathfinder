@@ -7,12 +7,13 @@
 #include <iomanip>
 #include <fstream>
 #include <regex>
+#include <set>
 using namespace std;
 
 
 class Transit {
     private:
-        map<string, vector<pair<string, int>>> routes; // Format: stopA -> vector of <stopB, time>
+        map<string, set<pair<string, int>>> routes; // Format: stopA -> set of <stopB, time>
         map<string, string> stop_id_map; // id -> name
         map<string, string> stop_name_map; // name -> id
 
@@ -96,10 +97,13 @@ class Transit {
             route.first = stopB;
             route.second = time;
 
-            routes[stopA].push_back(route);
+            // Fix: Sometimes there are duplicate routes with identical locations, just at different times of day.
+            // But the total route time doesn't change, therefore it isn't necessary to update it, or add a duplicate.
+            // That means the vector of adjacents can actually be a set, to avoid duplicates.
+            routes[stopA].insert(route);
         }
 
-        vector<pair<string, int>> getAdjacents(string& stop) {
+        set<pair<string, int>> getAdjacents(string& stop) {
             return routes[stop];
         }
 
