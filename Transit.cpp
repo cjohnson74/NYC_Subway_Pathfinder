@@ -5,13 +5,16 @@
 #include <iterator>
 #include <algorithm>
 #include <iomanip>
-#include "Stop.cpp"
+#include <fstream>
+#include <regex>
 using namespace std;
 
 
 class Transit {
     private:
-        map<Stop, vector<pair<Stop, int>>> routes; // Format: Stop -> vector of <Stop, time>
+        map<string, vector<pair<string, int>>> routes; // Format: stopA -> vector of <stopB, time>
+        map<string, string> stop_id_map; // id -> name
+        map<string, string> stop_name_map; // name -> id
 
     public:
         Transit() {
@@ -20,23 +23,92 @@ class Transit {
 
         // GTFS parsing of transit data & map population.
         Transit(string& filepath) {
-            
+            // 1. Read stops.txt and populate stop_id and stop_name maps.
+            ifstream stops_file("transit_data/stops.txt");
+            string stop_id, stop_name, junk; // junk is for unneeded data
+
+            getline(stops_file, junk); // remove first line
+
+            while(!stops_file.eof()) {
+                getline(stops_file, stop_id, ',');
+                getline(stops_file, junk, ',');
+                getline(stops_file, stop_id, ',');
+                getline(stops_file, junk);
+
+                stop_id_map[stop_id] = stop_name;
+                stop_name_map[stop_name] = stop_id;
+            }
+
+            // 2. Read stop_times.txt, then calculate and populate route adjacency list map.
+            ifstream times_file("transit_data/stops.txt");
+            string stopA_id, stopB_id, stopA_time, stopB_time, stopA_seq, stopB_seq, junk;
+            int timeA, timeB, time_total;
+
+            getline(times_file, junk); // remove first line
+
+            while(!times_file.eof()) {
+                // Parsing Explanation: From the way the GTFS file was formatted, each stop has a
+                // sequence number. If a stop's seq is exactly +1 greater than the line immediately
+                // before it, that means it is a route (stopA -> stopB), where the previous line is
+                // stopA, and the current line is stopB.
+                // Each group (trip) of routes start from sequence number 1. Therefore, all lines that
+                // have a sequence number >1 is guaranteed to complete a route, since there will always
+                // be a lower (-1) sequence number immediately before it.
+                stopA_id = stopB_id;
+                stopA_time = stopB_time;
+                stopA_seq = stopB_seq;
+
+                getline(times_file, junk, ',');
+                getline(times_file, stopB_time, ',');
+                getline(times_file, junk, ',');
+                getline(times_file, stopB_id, ',');
+                getline(times_file, stopB_seq);
+                getline(stops_file, junk);
+
+                if (stopB_seq != "1") {
+                    // Parse and calculate time between stops.
+                    timeA = convertToSeconds(stopA_time);
+                    timeB = convertToSeconds(stopB_time);
+                    time_total = timeB - timeA;
+
+                    insertRoute(stopA_id, stopB_id, time_total); 
+                }
+            }
+        }
+
+        // Takes a time format: HH:MM:SS, and converts to total seconds.
+        int convertToSeconds(string& time) {
+            int hours, minutes, seconds;
+            regex timeReg("(\\d{2}):(\\d{2}:(\\d{2}))");
+            smatch timeComponents;
+
+            if (regex_search(time, timeComponents, timeReg)) {
+                hours = stoi(timeComponents[1]);
+                minutes = stoi(timeComponents[2]);
+                seconds = stoi(timeComponents[3]);
+            }
+
+            return (hours * 3600) + (minutes * 60) + (seconds);
         }
 
         void insertRoute(string& stopA, string& stopB, int& time) {
+            pair<string, int> route;
+            route.first = stopB;
+            route.second = time;
 
+            routes[stopA].push_back(route);
         }
 
-        vector<pair<Stop, int>> getAdjacents(Stop& stop) {
+        vector<pair<string, int>> getAdjacents(string& stop) {
             return routes[stop];
         }
 
-        string getStopName(Stop& stop) {
-            return stop.getStopName();
+        string getStopName(string& stop_id) {
+            return stop_id_map[stop_id];
         }
 
-        string getStopID(Stop& stop) {
-            return stop.getStopID();
+        string getStopID(string& stop_name) {
+            return stop_name_map[stop_name];
         }
 
         // TODO: Dijksta's Shortest Path Algorithm
