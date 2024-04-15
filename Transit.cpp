@@ -22,9 +22,9 @@ class Transit {
         }
 
         // GTFS parsing of transit data & map population.
-        Transit(string& filepath) {
+        Transit(string& filepath_stops, string& filepath_times) {
             // 1. Read stops.txt and populate stop_id and stop_name maps.
-            ifstream stops_file("transit_data/stops.txt");
+            ifstream stops_file(filepath_stops);
             string stop_id, stop_name, junk; // junk is for unneeded data
 
             getline(stops_file, junk); // remove first line
@@ -32,7 +32,7 @@ class Transit {
             while(!stops_file.eof()) {
                 getline(stops_file, stop_id, ',');
                 getline(stops_file, junk, ',');
-                getline(stops_file, stop_id, ',');
+                getline(stops_file, stop_name, ',');
                 getline(stops_file, junk);
 
                 stop_id_map[stop_id] = stop_name;
@@ -40,8 +40,8 @@ class Transit {
             }
 
             // 2. Read stop_times.txt, then calculate and populate route adjacency list map.
-            ifstream times_file("transit_data/stops.txt");
-            string stopA_id, stopB_id, stopA_time, stopB_time, stopA_seq, stopB_seq, junk;
+            ifstream times_file(filepath_times);
+            string stopA_id, stopB_id, stopA_time, stopB_time, stopA_seq, stopB_seq;
             int timeA, timeB, time_total;
 
             getline(times_file, junk); // remove first line
@@ -62,8 +62,8 @@ class Transit {
                 getline(times_file, stopB_time, ',');
                 getline(times_file, junk, ',');
                 getline(times_file, stopB_id, ',');
-                getline(times_file, stopB_seq);
-                getline(stops_file, junk);
+                getline(times_file, stopB_seq, ',');
+                getline(times_file, junk);
 
                 if (stopB_seq != "1") {
                     // Parse and calculate time between stops.

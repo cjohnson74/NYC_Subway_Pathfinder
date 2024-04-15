@@ -33,3 +33,15 @@ main (CLI) -> Transit -> Map#1/Map#2
 */
 
 #include "Transit.cpp"
+
+int main() {
+    string STOPS_FILE = "transit_data/stops.txt"; // default: "transit_data/stops.txt"
+    string STOP_TIMES_FILE = "transit_data/stop_times.txt"; // default: "transit_data/stop_times.txt"
+
+    Transit transit(STOPS_FILE, STOP_TIMES_FILE);
+
+    // TODO: CLI
+
+
+    return 0;
+}
