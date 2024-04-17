@@ -184,6 +184,7 @@ class Transit {
 
             }
 
+            //return the distance to the stop specified
             return dist[stopB];
         }
 
