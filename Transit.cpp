@@ -8,6 +8,10 @@
 #include <fstream>
 #include <regex>
 #include <set>
+#include <unordered_set>
+#include <unordered_map>
+#define INFINITY INT_MAX
+
 using namespace std;
 
 
@@ -77,6 +81,7 @@ class Transit {
                     insertRoute(stopA_id, stopB_id, time_total); 
                 }
             }
+
         }
 
         // Takes a time format: HH:MM:SS, and converts to total seconds.
@@ -117,10 +122,70 @@ class Transit {
             return stop_name_map[stop_name];
         }
 
+        unordered_set<string> getSetOfAllStops() {
+            unordered_set<string> allStops = {};
+
+            //for every vertex in the graph, place in allStops
+            for (auto each: routes) {
+                allStops.insert(each.first);
+            }
+
+            return allStops;
+        }
+
+        string minDistance(unordered_map<string, int> distances, unordered_set<string> not_done) {
+            pair<string, int> minPair = {"", INFINITY};
+            for (auto stop: not_done) {
+                if (distances[stop] < minPair.second) {
+                    minPair.first = stop;
+                    minPair.second = distances[stop];
+                }
+            }
+
+            return minPair.first;
+        }
 
         // TODO: Dijksta's Shortest Path Algorithm
         // Determines shortest route, then prints route and the time to perform the algorithm.
-        // void shortest_path_dijksta(string& stopA, string& stopB) { }
+        int shortest_path_dijkstra(string& stopA, string& stopB) {
+            //source vertex
+            string src = stopA;
+
+            //sets -> done and not_done
+            unordered_set<string> done = {}; //empty
+            unordered_set<string> not_done = getSetOfAllStops(); //all stops
+
+            //init d[v] and p[v]
+            unordered_map<string, int> dist;
+            unordered_map<string, string> pred;
+            for (auto each: not_done) {
+                dist[each] = INFINITY;
+                //setting each val of pred to the string (null) for validation
+                pred[each] = "null";
+                //duplicates?
+            }
+            //set d[src] to 0
+            dist[src] = 0;
+
+            //while not_done is not empty
+            while (!not_done.empty()) {
+                //get min in not_done
+                string currStop = minDistance(dist, not_done);
+                not_done.erase(currStop);
+                done.insert(currStop);
+                //use unordered set instead of ordered set
+                set<pair<string, int>> adjacentStops = getAdjacents(currStop);
+                for (auto stop: adjacentStops) {
+                    if (dist[stop.first] > dist[currStop] + stop.second) {
+                        dist[stop.first] = dist[currStop] + stop.second;
+                        pred[stop.first] = currStop;
+                    }
+                }
+
+            }
+
+            return dist[stopB];
+        }
 
 
         // TODO: A* Search Shortest Path Algorithm
