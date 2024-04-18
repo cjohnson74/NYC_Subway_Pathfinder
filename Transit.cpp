@@ -75,9 +75,14 @@ class Transit {
                     timeB = convertToSeconds(stopB_time);
                     time_total = timeB - timeA;
 
-                    // TODO: possible bug if timeA is before midnight and timeB is after (negative time_total)
+                    // bug fix: timeA is before midnight, but timeB is after midnight,
+                    //          so offset timeB by 24 hours (86400 seconds).
+                    if (time_total < 0) {
+                        timeB += 86400;
+                        time_total = timeB - timeA;
+                    }
 
-                    insertRoute(stopA_id, stopB_id, time_total); 
+                    insertRoute(stopA_id, stopB_id, time_total);
                 }
             }
         }
