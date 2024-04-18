@@ -43,7 +43,53 @@ int main() {
 
     Transit transit(STOPS_FILE, STOP_TIMES_FILE);
 
-    // TODO: CLI menu
+    string stopA_name, stopB_name, stopA_id, stopB_id, exit;
+
+    // Menu CLI
+    cout << "Welcome to [name of the application]." << endl;
+
+    while (true) {
+        // User Input
+        while (true) {
+            cout << "Enter your current location:" << endl;
+            cin >> stopA_name;
+
+            if (transit.stopExists(stopA_name)) {
+                stopA_id = transit.getStopID(stopA_name);
+                continue;
+            } else {
+                cout << "This stop does not exist." << endl;
+        }
+        
+        while (true) {
+            cout << "Enter your current location:" << endl;
+            cin >> stopB_name;
+
+            if (transit.stopExists(stopB_name)) {
+                stopB_id = transit.getStopID(stopB_name);
+                continue;
+            } else {
+                cout << "This stop does not exist." << endl;
+        }
+
+        // TODO: Calculation & Output
+        cout << "Fastest Route" << endl;
+        cout << "Estimated Route Time: " << endl;
+        cout << "Dijksta's Algorithm runtime: " << endl;
+        cout << "A* Search Algorithm runtime: " << endl;
+        cout << endl;
+
+        cout << "Exit application? (y to exit, any other character to find new route)" << endl;
+        cin >> exit;
+
+        // Termination
+        if (exit == "y") {
+            continue;
+        }
+    }
+    
+
+
 
     return 0;
 }

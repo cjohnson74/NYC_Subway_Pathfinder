@@ -125,6 +125,10 @@ class Transit {
             return stop_name_map[stop_name];
         }
 
+        bool stopExists(string& stop_name) {
+            return stop_name_map.find(stop_name) != stop_name_map.end();
+        }
+
 
         // TODO: Dijksta's Shortest Path Algorithm
         // Determines shortest route, then prints route and the time to perform the algorithm.
