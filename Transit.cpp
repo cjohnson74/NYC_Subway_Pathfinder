@@ -36,6 +36,7 @@ class Transit {
                 getline(stops_file, stop_name, ',');
                 getline(stops_file, junk);
 
+                // TODO: BUG because one stop_name can map to MULTIPLE stop_ids.
                 stop_id_map[stop_id] = stop_name;
                 stop_name_map[stop_name] = stop_id;
             }
