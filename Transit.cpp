@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <map>
+#include <unordered_map>
 #include <iterator>
 #include <algorithm>
 #include <iomanip>
@@ -13,9 +13,9 @@ using namespace std;
 
 class Transit {
     private:
-        map<string, set<pair<string, int>>> routes; // Format: stopA -> set of <stopB, time>
-        map<string, string> stop_id_map; // id -> name
-        map<string, string> stop_name_map; // name -> id
+        unordered_map<string, set<pair<string, int>>> routes; // Format: stopA -> set of <stopB, time>
+        unordered_map<string, string> stop_id_map; // id -> name
+        unordered_map<string, string> stop_name_map; // name -> id
 
     public:
         Transit() {
@@ -47,7 +47,10 @@ class Transit {
 
             getline(times_file, junk); // remove first line
 
+            int debug_count = 0;
+
             while(!times_file.eof()) {
+                debug_count += 1;
                 // Parsing Explanation: From the way the GTFS file is formatted, each stop has a
                 // sequence number. If a stop's seq is exactly +1 greater than the line immediately
                 // before it, that means it is a route (stopA -> stopB), where the previous line is

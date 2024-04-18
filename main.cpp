@@ -29,6 +29,10 @@ name (string) => stop_id (string)
 5. CLI menu
 This will remain rooted in the main function.
 
+- Design change: map -> unordered_map
+  Removing the unneeded ordered map should improve performance.
+  Unordered sets cause errors, so omitting that.
+
 */
 
 #include "Transit.cpp"
