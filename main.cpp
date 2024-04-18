@@ -52,28 +52,30 @@ int main() {
         // User Input
         while (true) {
             cout << "Enter your current location:" << endl;
-            cin >> stopA_name;
+            getline(cin, stopA_name);
 
             if (transit.stopExists(stopA_name)) {
                 stopA_id = transit.getStopID(stopA_name);
-                continue;
+                break;
             } else {
                 cout << "This stop does not exist." << endl;
+            }
         }
         
         while (true) {
-            cout << "Enter your current location:" << endl;
-            cin >> stopB_name;
+            cout << "Enter your destination:" << endl;
+            getline(cin, stopB_name);
 
             if (transit.stopExists(stopB_name)) {
                 stopB_id = transit.getStopID(stopB_name);
-                continue;
+                break;
             } else {
                 cout << "This stop does not exist." << endl;
+            }
         }
 
         // TODO: Calculation & Output
-        cout << "Fastest Route" << endl;
+        cout << "Fastest Route: " << endl;
         cout << "Estimated Route Time: " << endl;
         cout << "Dijksta's Algorithm runtime: " << endl;
         cout << "A* Search Algorithm runtime: " << endl;
@@ -84,12 +86,10 @@ int main() {
 
         // Termination
         if (exit == "y") {
-            continue;
+            cout << "Exiting application..." << endl; 
+            break;
         }
     }
     
-
-
-
     return 0;
 }
