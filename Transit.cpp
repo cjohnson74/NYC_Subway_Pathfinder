@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <map>
+#include <unordered_map>
 #include <iterator>
 #include <algorithm>
 #include <iomanip>
@@ -13,9 +13,9 @@ using namespace std;
 
 class Transit {
     private:
-        map<string, set<pair<string, int>>> routes; // Format: stopA -> set of <stopB, time>
-        map<string, string> stop_id_map; // id -> name
-        map<string, string> stop_name_map; // name -> id
+        unordered_map<string, set<pair<string, int>>> routes; // Format: stopA -> set of <stopB, time>
+        unordered_map<string, string> stop_id_map; // id -> name
+        unordered_map<string, string> stop_name_map; // name -> id
 
     public:
         Transit() {
@@ -36,6 +36,7 @@ class Transit {
                 getline(stops_file, stop_name, ',');
                 getline(stops_file, junk);
 
+                // TODO: BUG because one stop_name can map to MULTIPLE stop_ids.
                 stop_id_map[stop_id] = stop_name;
                 stop_name_map[stop_name] = stop_id;
             }
@@ -47,7 +48,10 @@ class Transit {
 
             getline(times_file, junk); // remove first line
 
+            int debug_count = 0;
+
             while(!times_file.eof()) {
+                debug_count += 1;
                 // Parsing Explanation: From the way the GTFS file is formatted, each stop has a
                 // sequence number. If a stop's seq is exactly +1 greater than the line immediately
                 // before it, that means it is a route (stopA -> stopB), where the previous line is
@@ -72,9 +76,14 @@ class Transit {
                     timeB = convertToSeconds(stopB_time);
                     time_total = timeB - timeA;
 
-                    // TODO: possible bug if timeA is before midnight and timeB is after (negative time_total)
+                    // bug fix: timeA is before midnight, but timeB is after midnight,
+                    //          so offset timeB by 24 hours (86400 seconds).
+                    if (time_total < 0) {
+                        timeB += 86400;
+                        time_total = timeB - timeA;
+                    }
 
-                    insertRoute(stopA_id, stopB_id, time_total); 
+                    insertRoute(stopA_id, stopB_id, time_total);
                 }
             }
         }
@@ -115,6 +124,10 @@ class Transit {
 
         string getStopID(string& stop_name) {
             return stop_name_map[stop_name];
+        }
+
+        bool stopExists(string& stop_name) {
+            return stop_name_map.find(stop_name) != stop_name_map.end();
         }
 
 
