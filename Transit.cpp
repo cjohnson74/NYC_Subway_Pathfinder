@@ -8,6 +8,13 @@
 #include <fstream>
 #include <regex>
 #include <set>
+#include <unordered_set>
+#include <unordered_map>
+#include<cmath>
+#include <queue>
+#include <stack>
+
+
 using namespace std;
 
 
@@ -86,6 +93,7 @@ class Transit {
                     insertRoute(stopA_id, stopB_id, time_total);
                 }
             }
+
         }
 
         // Takes a time format: HH:MM:SS, and converts to total seconds.
@@ -139,6 +147,43 @@ class Transit {
             return stop_name_map[stop_name];
         }
 
+        void printRoutes() {
+            for (auto each: routes) {
+                cout << each.first << " : ";
+                set<pair<string, int>> adjs = routes[each.first];
+                for (auto i: adjs) {
+                    cout << "(" << i.first << " " << i.second << ")"<< " ";
+                }
+                cout << endl;
+            }
+        }
+
+        bool validPath(string stopA, string stopB) {
+            stack<string> s;
+            set<string> visited;
+            string src = stopA;
+            string dest = stopB;
+            s.push(src);
+
+            //dfs to find if reachable stop
+            while (!s.empty()) {
+                string curr = s.top();
+                visited.insert(curr);
+                s.pop();
+
+                set<pair<string, int>> adjacents = getAdjacents(curr);
+                for (auto each: adjacents) {
+                    if (each.first == dest) {
+                        return true;
+                    }
+                    if (!visited.count(each.first)) {
+                        s.push(each.first);
+                    }
+                }       
+            }
+
+            return false;
+        }
         bool stopExists(string& stop_name) {
             return stop_name_map.find(stop_name) != stop_name_map.end();
         }
@@ -146,7 +191,52 @@ class Transit {
 
         // TODO: Dijksta's Shortest Path Algorithm
         // Determines shortest route, then prints route and the time to perform the algorithm.
-        // void shortest_path_dijksta(string& stopA, string& stopB) { }
+        int shortest_path_dijkstra(string stopA, string stopB) {
+            //source vertex
+            string src = stopA;
+
+            //init d[v] and p[v]
+            unordered_map<string, int> dist;
+            unordered_map<string, string> pred;
+            for (auto each: routes) {
+                dist[each.first] = INFINITY;
+                //setting each val of pred to the string (null) for validation
+                pred[each.first] = "null";
+                //duplicates?
+            }
+
+            //set d[src] to 0
+            dist[src] = 0;
+
+            //init not_done heap and done set;
+            unordered_set<string> done = {}; //empty
+            //making the distance first for simplicity ::: pair -> {distance, stop}
+            priority_queue<pair<int, string> , vector<pair<int, string>>, greater<pair<int, string>>> not_done;
+
+            for (auto i: dist) {
+                not_done.push({i.second, i.first});
+            }
+            
+            //while not_done is not empty
+            while (!not_done.empty()) {
+                //get min in not_done
+                string currStop = not_done.top().second;
+                not_done.pop();
+                done.insert(currStop);
+                //use unordered set instead of ordered set
+                set<pair<string, int>> adjacentStops = getAdjacents(currStop);
+                for (auto stop: adjacentStops) {
+                    if (dist[stop.first] > dist[currStop] + stop.second) {
+                        dist[stop.first] = dist[currStop] + stop.second;
+                        pred[stop.first] = currStop;
+                    }
+                }
+
+            }
+
+            //return the distance to the stop specified
+            return dist[stopB];
+        }
 
 
         // TODO: A* Search Shortest Path Algorithm
