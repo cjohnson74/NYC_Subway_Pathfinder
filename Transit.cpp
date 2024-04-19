@@ -108,10 +108,23 @@ class Transit {
             route.first = stopB;
             route.second = time;
 
-            // Fix: Sometimes there are duplicate routes with identical locations, just at different times of day.
-            // But the total route time doesn't change, therefore it isn't necessary to update it, or add a duplicate.
-            // That means the vector of adjacents can actually be a set, to avoid duplicates.
-            routes[stopA].insert(route);
+            // Fix: Sometimes there are routes with identical paths (stopA/stopB), but with varying travel times, leading
+            // to duplicate entries for the same path. We decided to choose the SHORTEST travel time amongst them.
+            set<pair<string, int>> stopA_routes = routes[stopA];
+            for (pair<string, int> stopB_route : stopA_routes) {
+                if (stopB_route.first == stopB) {
+                    // Duplicate found, only add if shorter.
+                    if (time < stopB_route.second) {
+                        routes[stopA].erase(stopB_route);
+                        routes[stopA].insert(route);
+                    }
+
+                    return;
+                }
+            }
+            
+            // If no duplicate route found, add it to graph.
+            stopA_routes.insert(route);
         }
 
         set<pair<string, int>> getAdjacents(string& stop) {
