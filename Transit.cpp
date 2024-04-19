@@ -55,10 +55,7 @@ class Transit {
 
             getline(times_file, junk); // remove first line
 
-            int debug_count = 0;
-
             while(!times_file.eof()) {
-                debug_count += 1;
                 // Parsing Explanation: From the way the GTFS file is formatted, each stop has a
                 // sequence number. If a stop's seq is exactly +1 greater than the line immediately
                 // before it, that means it is a route (stopA -> stopB), where the previous line is
@@ -132,7 +129,7 @@ class Transit {
             }
             
             // If no duplicate route found, add it to graph.
-            stopA_routes.insert(route);
+            routes[stopA].insert(route);
         }
 
         set<pair<string, int>> getAdjacents(string& stop) {

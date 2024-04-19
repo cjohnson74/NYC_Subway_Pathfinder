@@ -38,10 +38,12 @@ This will remain rooted in the main function.
 #include "Transit.cpp"
 
 int main() {
-    string STOPS_FILE = "transit_data/stops.txt"; // default: "transit_data/stops.txt"
-    string STOP_TIMES_FILE = "transit_data/stop_times_debug.txt"; // default: "transit_data/stop_times.txt"
+    string STOPS_FILE = "mock_data/stops.txt"; // default: "transit_data/stops.txt"
+    string STOP_TIMES_FILE = "mock_data/stop_times_debug.txt"; // default: "transit_data/stop_times.txt"
 
     Transit transit(STOPS_FILE, STOP_TIMES_FILE);
+
+    transit.printRoutes();
 
     string stopA_name, stopB_name, stopA_id, stopB_id, exit;
 
