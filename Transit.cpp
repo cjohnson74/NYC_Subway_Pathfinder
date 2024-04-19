@@ -10,7 +10,10 @@
 #include <set>
 #include <unordered_set>
 #include <unordered_map>
-#define INFINITY INT_MAX
+#include<cmath>
+#include <queue>
+#include <stack>
+
 
 using namespace std;
 
@@ -122,56 +125,77 @@ class Transit {
             return stop_name_map[stop_name];
         }
 
-        unordered_set<string> getSetOfAllStops() {
-            unordered_set<string> allStops = {};
-
-            //for every vertex in the graph, place in allStops
+        void printRoutes() {
             for (auto each: routes) {
-                allStops.insert(each.first);
+                cout << each.first << " : ";
+                set<pair<string, int>> adjs = routes[each.first];
+                for (auto i: adjs) {
+                    cout << "(" << i.first << " " << i.second << ")"<< " ";
+                }
+                cout << endl;
             }
-
-            return allStops;
         }
 
-        string minDistance(unordered_map<string, int> distances, unordered_set<string> not_done) {
-            pair<string, int> minPair = {"", INFINITY};
-            for (auto stop: not_done) {
-                if (distances[stop] < minPair.second) {
-                    minPair.first = stop;
-                    minPair.second = distances[stop];
-                }
+        bool validPath(string stopA, string stopB) {
+            stack<string> s;
+            set<string> visited;
+            string src = stopA;
+            string dest = stopB;
+            s.push(src);
+
+            //dfs to find if reachable stop
+            while (!s.empty()) {
+                string curr = s.top();
+                visited.insert(curr);
+                s.pop();
+
+                set<pair<string, int>> adjacents = getAdjacents(curr);
+                for (auto each: adjacents) {
+                    if (each.first == dest) {
+                        return true;
+                    }
+                    if (!visited.count(each.first)) {
+                        s.push(each.first);
+                    }
+                }       
             }
 
-            return minPair.first;
+            return false;
         }
 
         // TODO: Dijksta's Shortest Path Algorithm
         // Determines shortest route, then prints route and the time to perform the algorithm.
-        int shortest_path_dijkstra(string& stopA, string& stopB) {
+        int shortest_path_dijkstra(string stopA, string stopB) {
             //source vertex
             string src = stopA;
-
-            //sets -> done and not_done
-            unordered_set<string> done = {}; //empty
-            unordered_set<string> not_done = getSetOfAllStops(); //all stops
 
             //init d[v] and p[v]
             unordered_map<string, int> dist;
             unordered_map<string, string> pred;
-            for (auto each: not_done) {
-                dist[each] = INFINITY;
+            for (auto each: routes) {
+                dist[each.first] = INFINITY;
                 //setting each val of pred to the string (null) for validation
-                pred[each] = "null";
+                pred[each.first] = "null";
                 //duplicates?
             }
+
             //set d[src] to 0
             dist[src] = 0;
 
+            //init not_done heap and done set;
+            unordered_set<string> done = {}; //empty
+            //making the distance first for simplicity ::: pair -> {distance, stop}
+            priority_queue<pair<int, string> , vector<pair<int, string>>, greater<pair<int, string>>> not_done;
+
+            for (auto i: dist) {
+                not_done.push({i.second, i.first});
+            }
+            
             //while not_done is not empty
             while (!not_done.empty()) {
                 //get min in not_done
-                string currStop = minDistance(dist, not_done);
-                not_done.erase(currStop);
+                string currStop = not_done.top().second;
+                not_done.pop();
                 done.insert(currStop);
                 //use unordered set instead of ordered set
                 set<pair<string, int>> adjacentStops = getAdjacents(currStop);

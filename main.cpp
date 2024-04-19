@@ -39,6 +39,7 @@ int main() {
 
     Transit transit(STOPS_FILE, STOP_TIMES_FILE);
 
+    
     // TODO: CLI menu
 
     return 0;
