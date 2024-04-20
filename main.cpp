@@ -39,6 +39,7 @@ This will remain rooted in the main function.
 
 int main() {
     string STOPS_FILE = "mock_data/stops.txt"; // default: "transit_data/stops.txt"
+    // string STOPS_FILE = "transit_data/stops.txt";
     string STOP_TIMES_FILE = "mock_data/stop_times_debug.txt"; // default: "transit_data/stop_times.txt"
 
     Transit transit(STOPS_FILE, STOP_TIMES_FILE);
@@ -79,13 +80,19 @@ int main() {
             }
         }
 
+        // A* Calculation
+        // returns pair<path, time>
+        tuple<string, float, chrono::microseconds> a_star_calc = transit.shortest_path_a_star(stopA_id, stopB_id);
+
 
         // Calculation & Output
         cout << endl;
         cout << "Fastest Route: " << "<insert path here>" << endl;
+        cout << "A* Fastest Route: " << get<0>(a_star_calc) << endl;
         cout << "Estimated Route Time: " << transit.shortest_path_dijkstra(stopA_id, stopB_id) << endl;
-        // cout << "Dijksta's Algorithm runtime: " << endl;
-        // cout << "A* Search Algorithm runtime: " << endl;
+        cout << "A* Estimated Route Time: " << get<1>(a_star_calc) << endl;
+        cout << "Dijksta's Algorithm runtime: " << endl;
+        cout << "A* Search Algorithm runtime: " << get<2>(a_star_calc).count() << "microseconds" << endl;
         cout << endl;
 
         // cout << "Exit application? (y to exit, any other character to find new route)" << endl;

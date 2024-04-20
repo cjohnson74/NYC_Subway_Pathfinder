@@ -13,7 +13,8 @@
 #include<cmath>
 #include <queue>
 #include <stack>
-
+#include <utility>
+#include <chrono>
 
 using namespace std;
 
@@ -23,6 +24,7 @@ class Transit {
         unordered_map<string, set<pair<string, int>>> routes; // Format: stopA -> set of <stopB, time>
         unordered_map<string, string> stop_id_map; // id -> name
         unordered_map<string, string> stop_name_map; // name -> id
+        unordered_map<string, float> stop_time_map;
 
     public:
         Transit() {
@@ -33,7 +35,7 @@ class Transit {
         Transit(string& filepath_stops, string& filepath_times) {
             // 1. Read stops.txt and populate stop_id and stop_name maps.
             ifstream stops_file(filepath_stops);
-            string stop_id, stop_name, junk; // junk is for unneeded data
+            string stop_id, stop_name, stop_lat, stop_lon, junk; // junk is for unneeded data
 
             getline(stops_file, junk); // remove first line
 
@@ -41,6 +43,9 @@ class Transit {
                 getline(stops_file, stop_id, ',');
                 getline(stops_file, junk, ',');
                 getline(stops_file, stop_name, ',');
+                getline(stops_file, junk, ',');
+                getline(stops_file, stop_lat, ',');
+                getline(stops_file, stop_lon, ',');
                 getline(stops_file, junk);
 
                 // TODO: BUG because one stop_name can map to MULTIPLE stop_ids.
@@ -87,6 +92,8 @@ class Transit {
                         time_total = timeB - timeA;
                     }
 
+                    stop_time_map[stopA_id] = float(timeA);
+                    stop_time_map[stopB_id] = float(timeB);
                     insertRoute(stopA_id, stopB_id, time_total);
                 }
             }
@@ -235,8 +242,81 @@ class Transit {
             return dist[stopB];
         }
 
+        float get_heuristic(string& start_stop, string& end_stop) {
+            return stop_time_map[end_stop] - stop_time_map[start_stop];
+        }
+
+        string get_shortest_path(unordered_map<string, string>& preds, string& curr_stop, string& start_stop) {
+            string shortest_path = curr_stop + " ";
+            while (curr_stop != start_stop) {
+                shortest_path.append(preds[curr_stop] + " ");
+                curr_stop = preds[curr_stop];
+            }
+
+            return string(shortest_path.rbegin(), shortest_path.rend());
+        }
+
 
         // TODO: A* Search Shortest Path Algorithm
         // Determines shortest route, then prints route and the time to perform the algorithm.
-        // void shortest_path_a_star(string& stopA, string& stopB) { }
+        // returns tuple<path, time, run_time>
+        tuple<string, float, chrono::microseconds> shortest_path_a_star(string& stopA, string& stopB) {
+            auto start = chrono::high_resolution_clock::now(); 
+            int count = 0; // use count for tie breaker if something is already in the pq it takes precidence
+            string start_stop = stopA;
+            string end_stop = stopB;
+
+            //init distance[v] and predecessor[v] and heuristic[v]
+            unordered_map<string, float> time;
+            unordered_map<string, string> pred;
+            unordered_map<string, float> heur;
+            priority_queue<tuple<int, int, string> , vector<tuple<int, int, string>>, greater<tuple<int, int, string>>> not_done;
+            not_done.push(make_tuple(0, count, start_stop)); // (time to get to stop, count, stop)
+
+            unordered_set<string> done = {};
+
+            for (auto route : routes) {
+                time[route.first] = INFINITY; // time to get to stop set to infinity
+                pred[route.first] = "null"; // string (null) since we don't know it's predecessor yet
+                heur[route.first] = INFINITY; // heuristic score set to inifinity
+            }
+
+            time[start_stop] = 0;
+            heur[start_stop] = get_heuristic(start_stop, end_stop);
+            unordered_set<string> pq_ref_set = {start_stop}; // helps us see what is in the priority queue
+
+            while (!pq_ref_set.empty()) {
+                string curr_stop = get<2>(not_done.top());
+                not_done.pop();
+                pq_ref_set.erase(pq_ref_set.find(curr_stop));
+
+                if (curr_stop == end_stop) {
+                    auto stop = chrono::high_resolution_clock::now(); 
+                    auto run_time = chrono::duration_cast<chrono::microseconds>(stop - start); 
+                    return make_tuple(get_shortest_path(pred, end_stop, start_stop), time[curr_stop], run_time);
+                }
+
+                for (auto route : routes[curr_stop]) {
+                    float curr_time = time[curr_stop] + route.second;
+
+                    if (curr_time < time[route.first]) {
+                        pred[route.first] = curr_stop;
+                        time[route.first] = curr_time;
+                        heur[route.first] = curr_time + get_heuristic(route.first, end_stop);
+                        if (pq_ref_set.find(route.first) == pq_ref_set.end()) {
+                            count++; // increment count to keep track of order put into pq
+                            not_done.push(make_tuple(heur[route.first], count, route.first)); // add neighbor to pq
+                            pq_ref_set.insert(route.first); // add neighbor to pq ref
+                        }
+                    }
+                }
+
+                if (curr_stop != start_stop) 
+                    done.insert(curr_stop);
+            }
+
+            auto stop = chrono::high_resolution_clock::now(); 
+            auto run_time = chrono::duration_cast<chrono::microseconds>(stop - start);
+            return make_tuple("Path does not exist from " + start_stop + " to " + end_stop, 0.0, run_time);
+        };
 };
