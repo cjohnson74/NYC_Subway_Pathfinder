@@ -15,6 +15,7 @@
 #include <stack>
 #include <utility>
 #include <chrono>
+#include <cmath>
 
 using namespace std;
 
@@ -25,6 +26,7 @@ class Transit {
         unordered_map<string, string> stop_id_map; // id -> name
         unordered_map<string, string> stop_name_map; // name -> id
         unordered_map<string, float> stop_time_map;
+        unordered_map<string, pair<double, double>> stop_pos_map; // id -> pair of <latitude, longitude>
 
     public:
         Transit() {
@@ -36,6 +38,9 @@ class Transit {
             // 1. Read stops.txt and populate stop_id and stop_name maps.
             ifstream stops_file(filepath_stops);
             string stop_id, stop_name, stop_lat, stop_lon, junk; // junk is for unneeded data
+            int currLine = 1;
+
+            cout << "Reading file: " << filepath_stops << endl;
 
             getline(stops_file, junk); // remove first line
 
@@ -47,18 +52,27 @@ class Transit {
                 getline(stops_file, stop_lat, ',');
                 getline(stops_file, stop_lon, ',');
                 getline(stops_file, junk);
+                currLine++;
 
                 // TODO: BUG because one stop_name can map to MULTIPLE stop_ids.
                 stop_id_map[stop_id] = stop_name;
                 stop_name_map[stop_name] = stop_id;
-                cout << stop_id << ": " << stop_name << endl;
+                stop_pos_map[stop_id] = make_pair(stod(stop_lat), stod(stop_lon));
+                // cout << stop_id << ": " << stop_name << endl;
+
+                displayLoadingBar(currLine, 1505);
+                cout << "Reading line " << currLine << " of " << 1505 << "\r";
+                cout.flush();
             }
+            cout << endl << filepath_stops << " file reading completed!" << endl;
 
             // 2. Read stop_times.txt, then calculate and populate route adjacency list graph.
             ifstream times_file(filepath_times);
             string stopA_id, stopB_id, stopA_time, stopB_time, stopA_seq, stopB_seq;
             int timeA, timeB, time_total;
-            int count = 1;
+            currLine = 1;
+
+            cout << "Reading file: " << filepath_times << endl;
 
             getline(times_file, junk); // remove first line
 
@@ -80,7 +94,7 @@ class Transit {
                 getline(times_file, stopB_id, ',');
                 getline(times_file, stopB_seq, ',');
                 getline(times_file, junk);
-                count++;
+                currLine++;
 
                 if (stopB_seq != "1") {
                     // Parse and calculate time between stops.
@@ -95,13 +109,33 @@ class Transit {
                         time_total = timeB - timeA;
                     }
 
-                    stop_time_map[stopA_id] = float(timeA);
-                    stop_time_map[stopB_id] = float(timeB);
-                    cout << double(double(count) / double(554833)) * 100 << "%" << endl;
-                    insertRoute(stopA_id, stopB_id, time_total);
+                    insertRoute(stopA_id, stopB_id, timeA, timeB);
                 }
+                displayLoadingBar(currLine, 554833);
+                cout << "Reading line " << currLine << " of " << 554833 << "\r";
+                cout.flush();
             }
+            cout << endl << filepath_times << "file reading completed!" << endl;
+        }
 
+        // aesthetic function that outputs a loading bar in CLI since it takes so long to read the stop_times.txt file
+        void displayLoadingBar(int current, int total) {
+            int barWidth = 70;
+            float progress = (float)current / total;
+            int pos = barWidth * progress;
+
+            // Clear previous output
+            cout << "\r";
+
+            // Output loading bar
+            cout << "[\033[32m";
+            for (int i = 0; i < barWidth; ++i) {
+                if (i < pos) cout << "#";
+                else if (i == pos) cout << "#";
+                else cout << " ";
+            }
+            cout << "\033[0m] " << setw(3) << int(progress * 100.0) << "% ";
+            cout.flush();
         }
 
         // Takes a time format: HH:MM:SS, and converts to total seconds.
@@ -119,10 +153,10 @@ class Transit {
             return (hours * 3600) + (minutes * 60) + (seconds);
         }
 
-        void insertRoute(string& stopA, string& stopB, int& time) {
+        void insertRoute(string& stopA, string& stopB, int& timeA, int& timeB) {
             pair<string, int> route;
             route.first = stopB;
-            route.second = time;
+            route.second = timeB - timeA;
 
             // Fix: Sometimes there are routes with identical paths (stopA/stopB), but with varying travel times, leading
             // to duplicate entries for the same path. We decided to choose the SHORTEST travel time amongst them.
@@ -130,17 +164,20 @@ class Transit {
             for (pair<string, int> stopB_route : stopA_routes) {
                 if (stopB_route.first == stopB) {
                     // Duplicate found, only add if shorter.
-                    if (time < stopB_route.second) {
+                    if (route.second < stopB_route.second) {
                         routes[stopA].erase(stopB_route);
                         routes[stopA].insert(route);
                     }
-
+                    stop_time_map[stopA] = float(timeA);
+                    stop_time_map[stopB] = float(timeB);
                     return;
                 }
             }
             
             // If no duplicate route found, add it to graph.
             routes[stopA].insert(route);
+            stop_time_map[stopA] = float(timeA);
+            stop_time_map[stopB] = float(timeB);
         }
 
         set<pair<string, int>> getAdjacents(string& stop) {
@@ -256,8 +293,21 @@ class Transit {
             return dist[stopB];
         }
 
-        float get_heuristic(string& start_stop, string& end_stop) {
+        // get heuristic by using stop time to calculate how long it will take to get from start to end
+        float get_time_heuristic(string& start_stop, string& end_stop) {
             return stop_time_map[end_stop] - stop_time_map[start_stop];
+        }
+
+        // get heuristic by using position (lat, lon) to calculate the manhattan distance or "L distance"
+        float get_pos_heuristic(string& start_stop, string& end_stop) {
+            // x -> longitude, y -> latitude
+            float x1 = get<1>(stop_pos_map[start_stop]);
+            float y1 = get<0>(stop_pos_map[start_stop]);
+            float x2 = get<1>(stop_pos_map[end_stop]);
+            float y2 = get<0>(stop_pos_map[end_stop]);
+
+            // calculate and return manhattan distance
+            return abs(x1 - x2) + abs(y1 - y2);
         }
 
         string get_shortest_path(unordered_map<string, string>& preds, string& curr_stop, string& start_stop) {
@@ -296,7 +346,7 @@ class Transit {
             }
 
             time[start_stop] = 0;
-            heur[start_stop] = get_heuristic(start_stop, end_stop);
+            heur[start_stop] = get_pos_heuristic(start_stop, end_stop);
             unordered_set<string> pq_ref_set = {start_stop}; // helps us see what is in the priority queue
 
             while (!pq_ref_set.empty()) {
@@ -316,7 +366,7 @@ class Transit {
                     if (curr_time < time[route.first]) {
                         pred[route.first] = curr_stop;
                         time[route.first] = curr_time;
-                        heur[route.first] = curr_time + get_heuristic(route.first, end_stop);
+                        heur[route.first] = curr_time + get_pos_heuristic(route.first, end_stop);
                         if (pq_ref_set.find(route.first) == pq_ref_set.end()) {
                             count++; // increment count to keep track of order put into pq
                             not_done.push(make_tuple(heur[route.first], count, route.first)); // add neighbor to pq
