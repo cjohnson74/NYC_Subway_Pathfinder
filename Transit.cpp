@@ -196,6 +196,16 @@ class Transit {
             return stop_name_map.find(stop_name) != stop_name_map.end();
         }
 
+        void updatePriority(unordered_set<string>& done, unordered_map<string, int>& distances, priority_queue<pair<int, string> , vector<pair<int, string>>, greater<pair<int, string>>>& minHeap) {
+            //https://stackoverflow.com/questions/2852140/priority-queue-clear-method
+            minHeap = priority_queue<pair<int, string> , vector<pair<int, string>>, greater<pair<int, string>>>(); // reset
+            for (auto i: distances) {
+                if (!done.count(i.first)) {
+                    minHeap.push({i.second, i.first});
+                }
+            }
+        }
+
 
         // TODO: Dijksta's Shortest Path Algorithm
         // Determines shortest route, then prints route and the time to perform the algorithm.
@@ -218,12 +228,10 @@ class Transit {
 
             //init not_done heap and done set;
             unordered_set<string> done = {}; //empty
-            //making the distance first for simplicity ::: pair -> {distance, stop}
+            //making the distance first for simplicity of sorting ::: pair -> {distance, stop}
             priority_queue<pair<int, string> , vector<pair<int, string>>, greater<pair<int, string>>> not_done;
 
-            for (auto i: dist) {
-                not_done.push({i.second, i.first});
-            }
+            updatePriority(done, dist, not_done);
             
             //while not_done is not empty
             while (!not_done.empty()) {
@@ -234,9 +242,11 @@ class Transit {
                 //use unordered set instead of ordered set
                 set<pair<string, int>> adjacentStops = getAdjacents(currStop);
                 for (auto stop: adjacentStops) {
-                    if (dist[stop.first] > dist[currStop] + stop.second) {
-                        dist[stop.first] = dist[currStop] + stop.second;
-                        pred[stop.first] = currStop;
+                    if (dist[stop.first] > dist[currStop] + stop.second) { // relax edges
+                        int newDist = dist[currStop] + stop.second;
+                        dist[stop.first] = newDist;
+                        pred[stop.first] = currStop;                        
+                        updatePriority(done, dist, not_done);
                     }
                 }
 
