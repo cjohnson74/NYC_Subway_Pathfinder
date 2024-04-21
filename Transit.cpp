@@ -51,12 +51,14 @@ class Transit {
                 // TODO: BUG because one stop_name can map to MULTIPLE stop_ids.
                 stop_id_map[stop_id] = stop_name;
                 stop_name_map[stop_name] = stop_id;
+                cout << stop_id << ": " << stop_name << endl;
             }
 
             // 2. Read stop_times.txt, then calculate and populate route adjacency list graph.
             ifstream times_file(filepath_times);
             string stopA_id, stopB_id, stopA_time, stopB_time, stopA_seq, stopB_seq;
             int timeA, timeB, time_total;
+            int count = 1;
 
             getline(times_file, junk); // remove first line
 
@@ -78,6 +80,7 @@ class Transit {
                 getline(times_file, stopB_id, ',');
                 getline(times_file, stopB_seq, ',');
                 getline(times_file, junk);
+                count++;
 
                 if (stopB_seq != "1") {
                     // Parse and calculate time between stops.
@@ -94,6 +97,7 @@ class Transit {
 
                     stop_time_map[stopA_id] = float(timeA);
                     stop_time_map[stopB_id] = float(timeB);
+                    cout << double(double(count) / double(554833)) * 100 << "%" << endl;
                     insertRoute(stopA_id, stopB_id, time_total);
                 }
             }
@@ -143,17 +147,17 @@ class Transit {
             return routes[stop];
         }
 
-        string getStopName(string& stop_id) {
+        string getStopName(string stop_id) {
             return stop_id_map[stop_id];
         }
 
-        string getStopID(string& stop_name) {
+        string getStopID(string stop_name) {
             return stop_name_map[stop_name];
         }
 
         void printRoutes() {
             for (auto each: routes) {
-                cout << each.first << " : ";
+                cout << getStopName(each.first) << " : ";
                 set<pair<string, int>> adjs = routes[each.first];
                 for (auto i: adjs) {
                     cout << "(" << i.first << " " << i.second << ")"<< " ";
