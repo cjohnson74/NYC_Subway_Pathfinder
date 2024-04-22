@@ -59,7 +59,7 @@ void constructTransit(const httplib::Request& req, httplib::Response& res, Trans
         transit.buildTransit(STOPS_FILE, STOP_TIMES_FILE);
         // Once construction is complete, notify the client
         nlohmann::json completeJson;
-        completeJson["constructionComplete"] = "transite construction completed";
+        completeJson["res"] = "transite construction completed";
         res.set_content(completeJson.dump(), "application/json");
     });
 
