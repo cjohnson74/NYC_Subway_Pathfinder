@@ -41,6 +41,10 @@ This will remain rooted in the main function.
 #include "include/json.hpp"
 
 void constructTransit(const httplib::Request& req, httplib::Response& res, Transit& transit) {
+    // Set a longer timeout duration (in seconds)
+    res.set_header("Connection", "Keep-Alive");
+    res.set_header("Keep-Alive", "timeout=600"); // Set timeout to 10 minutes (600 seconds)
+
     // string STOPS_FILE = "mock_data/stops.txt"; // default: "transit_data/stops.txt"
     string STOPS_FILE = "backend/transit_data/stops.txt";
     // string STOP_TIMES_FILE = "mock_data/stop_times_debug.txt"; // default: "transit_data/stop_times.txt"
@@ -48,13 +52,31 @@ void constructTransit(const httplib::Request& req, httplib::Response& res, Trans
 
     // Generate JSON response
     nlohmann::json responseJson;
-
     responseJson["data"] = "started building transit";
 
     // Set response content type and body
     res.set_content(responseJson.dump(), "application/json");
 
-    transit.buildTransit(STOPS_FILE, STOP_TIMES_FILE);
+    // Start building transit in a separate thread to avoid blocking the request handler
+    std::thread transitBuilder([&transit, &STOPS_FILE, &STOP_TIMES_FILE]() {
+        transit.buildTransit(STOPS_FILE, STOP_TIMES_FILE);
+    });
+
+    transitBuilder.detach(); // Detach the thread to let it run independently
+
+    // Send periodic updates to the client
+    while (true) {
+        // Check if transit construction is complete
+        if (transit.isConstructionComplete()) {
+            // Notify the client that transit construction is complete
+            res.set_content("{\"data\": \"transit construction completed\"}", "application/json");
+            break;
+        } else {
+            // Send a periodic update to the client
+            res.set_content("{\"data\": \"building transit...\"}", "application/json");
+            std::this_thread::sleep_for(std::chrono::seconds(5)); // Send updates every 5 seconds
+        }
+    }
 }
 
 // Define a function to handle POST requests
@@ -97,7 +119,7 @@ int main() {
     // Create an instance of the HTTP server
     httplib::Server server;
 
-    // Serve static files from the "public" directory
+    // Serve static files from the "frontend" directory
     server.set_mount_point("/", "frontend");
 
     Transit transit;

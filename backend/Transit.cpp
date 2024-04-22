@@ -16,6 +16,7 @@
 #include <utility>
 #include <chrono>
 #include <cmath>
+#include <mutex>
 
 using namespace std;
 
@@ -27,10 +28,24 @@ class Transit {
         unordered_map<string, string> stop_name_map; // name -> id
         unordered_map<string, float> stop_time_map;
         unordered_map<string, pair<double, double>> stop_pos_map; // id -> pair of <latitude, longitude>
+        bool constructionComplete = false; // Flag to track transit construction status
+        mutex constructionMutex; // Mutex for thread safety
 
     public:
         Transit() {
 
+        }
+
+        // Function to check if transit construction is complete
+        bool isConstructionComplete() {
+            std::lock_guard<std::mutex> lock(constructionMutex); // Lock the mutex for thread safety
+            return constructionComplete;
+        }
+
+        // Function to mark transit construction as complete
+        void markConstructionComplete() {
+            std::lock_guard<std::mutex> lock(constructionMutex); // Lock the mutex for thread safety
+            constructionComplete = true;
         }
 
         // GTFS parsing of transit data & map population.
@@ -120,6 +135,8 @@ class Transit {
                 cout.flush();
             }
             cout << endl << filepath_times << "file reading completed!" << endl;
+            // Once construction is complete, mark it as such
+            markConstructionComplete();
         }
 
         // aesthetic function that outputs a loading bar in CLI since it takes so long to read the stop_times.txt file

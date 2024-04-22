@@ -25,9 +25,6 @@
     <script>
         // Funciton to send HTTP request to the backend and construt transit object
         function constructTransit() {
-            var start = document.getElementById('start').value;
-            var end = document.getElementById('end').value;
-
             // Send HTTP request to the backend
             fetch('/constructTransit', {
                 method: 'POST',
@@ -44,6 +41,28 @@
                 console.error('Error:', error);
             });
         }
+
+        function checkConstructionStatus() {
+            fetch('/isConstructionComplete')
+            .then(response => response.json())
+            .then(data => {
+                // Check if construction is complete
+                if (data.constructionComplete) {
+                    // Transit construction is complete, update UI or perform necessary actions
+                    console.log('Transit construction is complete!');
+                    clearInterval(interval); // Stop further checks
+                } else {
+                    // Transit construction is not yet complete, continue checking
+                    console.log('Transit construction is in progress...');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        // Periodically check transit construction status every 5 seconds
+        var interval = setInterval(checkConstructionStatus, 5000);
 
         // Function to send HTTP request to the backend and display shortest path on the map
         function findShortestPath() {
