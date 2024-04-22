@@ -77,8 +77,6 @@ int main() {
     // string STOP_TIMES_FILE = "mock_data/stop_times_debug.txt"; // default: "transit_data/stop_times.txt"
     string STOP_TIMES_FILE = "backend/transit_data/stop_times.txt";
 
-    Transit transit(STOPS_FILE, STOP_TIMES_FILE);
-
     // BELOW IS SERVER CODE
 
     // Getting port environment variable from Heroku
@@ -90,6 +88,8 @@ int main() {
 
     // Serve static files from the "public" directory
     server.set_mount_point("/", "frontend");
+
+    Transit transit(STOPS_FILE, STOP_TIMES_FILE);
 
     // Define a POST request handler
     server.Post("/findShortestPathAStar", [&transit](const httplib::Request& req, httplib::Response& res) {
