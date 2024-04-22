@@ -73,9 +73,9 @@ void handlePost(const httplib::Request& req, httplib::Response& res, Transit& tr
 
 int main() {
     // string STOPS_FILE = "mock_data/stops.txt"; // default: "transit_data/stops.txt"
-    string STOPS_FILE = "transit_data/stops.txt";
+    string STOPS_FILE = "backend/transit_data/stops.txt";
     // string STOP_TIMES_FILE = "mock_data/stop_times_debug.txt"; // default: "transit_data/stop_times.txt"
-    string STOP_TIMES_FILE = "transit_data/stop_times.txt";
+    string STOP_TIMES_FILE = "backend/transit_data/stop_times.txt";
 
     Transit transit(STOPS_FILE, STOP_TIMES_FILE);
 
