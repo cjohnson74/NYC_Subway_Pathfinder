@@ -64,6 +64,9 @@ void constructTransit(const httplib::Request& req, httplib::Response& res, Trans
     });
 
     transitBuilder.detach(); // Detach the thread to let it run independently
+
+    // Set response content type and body
+    res.set_content(responseJson.dump(), "application/json");
 }
 
 // Define a function to handle POST requests
