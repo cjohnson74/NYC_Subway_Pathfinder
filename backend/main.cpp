@@ -52,7 +52,7 @@ void constructTransit(const httplib::Request& req, httplib::Response& res, Trans
 
     // Generate JSON response
     nlohmann::json responseJson;
-    responseJson["data"] = "started building transit";
+    responseJson["res"] = "started building transit";
 
     // Set response content type and body
     res.set_content(responseJson.dump(), "application/json");
