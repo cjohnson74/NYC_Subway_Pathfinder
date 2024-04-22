@@ -62,7 +62,7 @@ int main() {
             getline(cin, stopA_name);
 
             if (transit.stopExists(stopA_name)) {
-                stopA_id = transit.getStopID(stopA_name);
+                // stopA_id = transit.getStopID(stopA_name);
                 break;
             } else {
                 cout << "ERROR: This stop does not exist." << endl;
@@ -74,7 +74,7 @@ int main() {
             getline(cin, stopB_name);
 
             if (transit.stopExists(stopB_name)) {
-                stopB_id = transit.getStopID(stopB_name);
+                // stopB_id = transit.getStopID(stopB_name);
                 break;
             } else {
                 cout << "ERROR: This stop does not exist." << endl;
@@ -83,7 +83,7 @@ int main() {
 
         // A* Calculation
         // returns pair<path, time>
-        tuple<string, float, chrono::microseconds> a_star_calc = transit.shortest_path_a_star(stopA_id, stopB_id);
+        tuple<string, float, chrono::microseconds> a_star_calc = transit.shortest_path_a_star(stopA_name, stopB_name);
 
 
         // Calculation & Output
