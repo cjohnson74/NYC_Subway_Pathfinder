@@ -55,8 +55,8 @@ void constructTransit(const httplib::Request& req, httplib::Response& res, Trans
     responseJson["res"] = "started building transit";
 
     // Start building transit in a separate thread to avoid blocking the request handler
-    std::thread transitBuilder([&transit, &STOPS_FILE, &STOP_TIMES_FILE, &res]() {
-        transit.buildTransit(STOPS_FILE, STOP_TIMES_FILE);
+    std::thread transitBuilder([&transit, &res]() {
+        transit.buildTransit();
         // Once construction is complete, notify the client
         nlohmann::json completeJson;
         completeJson["res"] = "transite construction completed";
