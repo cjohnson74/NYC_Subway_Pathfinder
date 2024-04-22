@@ -89,6 +89,8 @@ int main() {
     // Serve static files from the "public" directory
     server.set_mount_point("/", "frontend");
 
+    server.set_mount_point("/", "backend");
+
     Transit transit(STOPS_FILE, STOP_TIMES_FILE);
 
     // Define a POST request handler

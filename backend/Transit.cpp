@@ -39,8 +39,8 @@ class Transit {
             ifstream stops_file(filepath_stops);
             std::ifstream file("transit_data/stops.txt");
             if (!file.is_open()) {
-            std::cerr << "Error opening file" << std::endl;
-    }
+                std::cerr << "Error opening file" << std::endl;
+            }
             string stop_id, stop_name, stop_lat, stop_lon, junk; // junk is for unneeded data
             int currLine = 1;
 
