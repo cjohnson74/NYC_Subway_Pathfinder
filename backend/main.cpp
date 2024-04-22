@@ -80,21 +80,21 @@ int main() {
 
     // BELOW IS SERVER CODE
 
-    // // Create an instance of the HTTP server
-    // httplib::Server server;
+    // Create an instance of the HTTP server
+    httplib::Server server;
 
-    // // Define a POST request handler
-    // server.Post("/findShortestPathAStar", [&transit](const httplib::Request& req, httplib::Response& res) {
-    //     handlePost(req, res, transit);
-    // });
+    // Define a POST request handler
+    server.Post("/findShortestPathAStar", [&transit](const httplib::Request& req, httplib::Response& res) {
+        handlePost(req, res, transit);
+    });
 
-    // // Define Post request handler for Dijkstra
-    // server.Post("/findShortestPathDijkstra", [&transit](const httplib::Request& req, httplib::Response& res) {
-    //     handlePost(req, res, transit);
-    // });
+    // Define Post request handler for Dijkstra
+    server.Post("/findShortestPathDijkstra", [&transit](const httplib::Request& req, httplib::Response& res) {
+        handlePost(req, res, transit);
+    });
 
-    // // Start the server and listen on port 8000
-    // server.listen("localhost", 8000);
+    // Start the server and listen on port 8000
+    server.listen("localhost", 8000);
 
     // ABOVE IS SERVER CODE
 
