@@ -28,7 +28,7 @@
             var end = document.getElementById('end').value;
 
             // Send HTTP request to the backend
-            fetch('http://localhost:8000/findShortestPathAStar', {
+            fetch('/findShortestPathAStar', { // Use relative URL to accommodate different environments
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -72,6 +72,6 @@
             shortestPath.setMap(map);
         }
     </script>
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA7c2-82jra5yvV4KTrVxVcTvnaXdYHej&callback=displayShortestPath"></script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA7c2-82jra5yvV4KTrVxVcTvnaXdYHej"></script>
 </body>
 </html>
