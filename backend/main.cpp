@@ -36,6 +36,39 @@ This will remain rooted in the main function.
 */
 
 #include "Transit.cpp"
+#include <iostream>
+#include "include/httplib.h" // Include the httplib library
+#include "include/json.hpp"
+
+// Define a function to handle POST requests
+void handlePost(const httplib::Request& req, httplib::Response& res, Transit& transit) {
+    // Parse JSON data from the request body
+    // Extract start and end stations
+    // Call A* algorithm to find shortest path
+    // Generate JSON response containing shortest path
+    std::string start = req.get_param_value("start");
+    std::string end = req.get_param_value("end");
+    
+    // Execute A* algorithm and find shortest path
+    tuple<vector<string>, float, chrono::microseconds, unordered_map<string, pair<double, double>>> a_star_res = transit.shortest_path_a_star(start, end);
+
+    // Execute Dijkstra's algorithms and find shortest path
+    int dijkstra_res = transit.shortest_path_dijkstra(start, end);
+
+    // Generate JSON response
+    nlohmann::json responseJson;
+    unordered_map<string, pair<double, double>> stop_pos_map = get<3>(a_star_res);
+    vector<pair<double, double>> stops_pos;
+
+    for (auto stop : get<0>(a_star_res)) {
+        stops_pos.push_back(stop_pos_map[stop]);
+    }
+
+    responseJson["shortestPath"] = stops_pos;
+
+    // Set response content type and body
+    res.set_content(responseJson.dump(), "application/json");
+}
 
 int main() {
     // string STOPS_FILE = "mock_data/stops.txt"; // default: "transit_data/stops.txt"
@@ -44,6 +77,26 @@ int main() {
     string STOP_TIMES_FILE = "transit_data/stop_times.txt";
 
     Transit transit(STOPS_FILE, STOP_TIMES_FILE);
+
+    // BELOW IS SERVER CODE
+
+    // // Create an instance of the HTTP server
+    // httplib::Server server;
+
+    // // Define a POST request handler
+    // server.Post("/findShortestPathAStar", [&transit](const httplib::Request& req, httplib::Response& res) {
+    //     handlePost(req, res, transit);
+    // });
+
+    // // Define Post request handler for Dijkstra
+    // server.Post("/findShortestPathDijkstra", [&transit](const httplib::Request& req, httplib::Response& res) {
+    //     handlePost(req, res, transit);
+    // });
+
+    // // Start the server and listen on port 8000
+    // server.listen("localhost", 8000);
+
+    // ABOVE IS SERVER CODE
 
     // debugging
     transit.printRoutes();
@@ -83,13 +136,22 @@ int main() {
 
         // A* Calculation
         // returns pair<path, time>
-        tuple<string, float, chrono::microseconds> a_star_calc = transit.shortest_path_a_star(stopA_id, stopB_id);
+        tuple<vector<string>, float, chrono::microseconds, unordered_map<string, pair<double, double>>> a_star_calc = transit.shortest_path_a_star(stopA_id, stopB_id);
 
+        string shortest_a_star_path = "";
+
+        for (auto stop : get<0>(a_star_calc)) {
+            shortest_a_star_path.append(stop + " ");
+        }
 
         // Calculation & Output
         cout << endl;
         cout << "Fastest Route: " << "<insert path here>" << endl;
-        cout << "A* Fastest Route: " << get<0>(a_star_calc) << endl;
+        if (!shortest_a_star_path.empty()) {
+            cout << "A* Fastest Route: Path does not exist" << endl;
+        } else {
+            cout << "A* Fastest Route: " << shortest_a_star_path << endl;
+        }
         cout << "Estimated Route Time: " << transit.shortest_path_dijkstra(stopA_id, stopB_id) << endl;
         cout << "A* Estimated Route Time: " << get<1>(a_star_calc) << endl;
         cout << "Dijksta's Algorithm runtime: " << endl;

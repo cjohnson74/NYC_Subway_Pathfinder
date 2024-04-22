@@ -310,21 +310,50 @@ class Transit {
             return abs(x1 - x2) + abs(y1 - y2);
         }
 
-        string get_shortest_path(unordered_map<string, string>& preds, string& curr_stop, string& start_stop) {
-            string shortest_path = curr_stop + " ";
+        // Using positon (lat, lon) and the Haversine Formula to calculate the Heuristic
+        float get_pos_haversine_heuristic(string& start_stop, string& end_stop) {
+            const double R = 6371000.0; // Earth radius in meters
+            const double pi = 3.14159265358979323866;
+
+            // Get lat and long
+            double start_lat = get<0>(stop_pos_map[start_stop]);
+            double start_lon = get<1>(stop_pos_map[start_stop]);
+            double end_lat = get<0>(stop_pos_map[end_stop]);
+            double end_lon = get<1>(stop_pos_map[end_stop]);
+
+            // Convert lat and long from degrees to radians
+            double phi1 = start_lat * pi / 180.0;
+            double phi2 = end_lat * pi / 180.0;
+            double deltaPhi = (end_lat - start_lat) * pi / 180.0;
+            double deltaLambda = (end_lon - start_lon) * pi / 180.0;
+
+            // Calculate Haversine formula components
+            double a = sin(deltaPhi / 2) * sin(deltaPhi / 2) +
+                        cos(phi1) * cos(phi2) *
+                        sin(deltaLambda / 2) * sin(deltaLambda / 2);
+            double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+
+            // Calculate distance
+            double distance = R * c;
+            return distance;
+        }
+
+        vector<string> get_shortest_path(unordered_map<string, string>& preds, string& curr_stop, string& start_stop) {
+            vector<string> shortest_path = {curr_stop};
             while (curr_stop != start_stop) {
-                shortest_path.append(preds[curr_stop] + " ");
+                shortest_path.push_back(preds[curr_stop]);
                 curr_stop = preds[curr_stop];
             }
 
-            return string(shortest_path.rbegin(), shortest_path.rend());
-        }
+            reverse(shortest_path.begin(), shortest_path.end());
 
+            return shortest_path;
+        }
 
         // TODO: A* Search Shortest Path Algorithm
         // Determines shortest route, then prints route and the time to perform the algorithm.
         // returns tuple<path, time, run_time>
-        tuple<string, float, chrono::microseconds> shortest_path_a_star(string& stopA, string& stopB) {
+        tuple<vector<string>, float, chrono::microseconds, unordered_map<string, pair<double, double>>> shortest_path_a_star(string& stopA, string& stopB) {
             auto start = chrono::high_resolution_clock::now(); 
             int count = 0; // use count for tie breaker if something is already in the pq it takes precidence
             string start_stop = stopA;
@@ -357,7 +386,7 @@ class Transit {
                 if (curr_stop == end_stop) {
                     auto stop = chrono::high_resolution_clock::now(); 
                     auto run_time = chrono::duration_cast<chrono::microseconds>(stop - start); 
-                    return make_tuple(get_shortest_path(pred, end_stop, start_stop), time[curr_stop], run_time);
+                    return make_tuple(get_shortest_path(pred, end_stop, start_stop), time[curr_stop], run_time, stop_pos_map);
                 }
 
                 for (auto route : routes[curr_stop]) {
@@ -366,7 +395,7 @@ class Transit {
                     if (curr_time < time[route.first]) {
                         pred[route.first] = curr_stop;
                         time[route.first] = curr_time;
-                        heur[route.first] = curr_time + get_pos_heuristic(route.first, end_stop);
+                        heur[route.first] = curr_time + get_pos_haversine_heuristic(route.first, end_stop);
                         if (pq_ref_set.find(route.first) == pq_ref_set.end()) {
                             count++; // increment count to keep track of order put into pq
                             not_done.push(make_tuple(heur[route.first], count, route.first)); // add neighbor to pq
@@ -381,6 +410,7 @@ class Transit {
 
             auto stop = chrono::high_resolution_clock::now(); 
             auto run_time = chrono::duration_cast<chrono::microseconds>(stop - start);
-            return make_tuple("Path does not exist from " + start_stop + " to " + end_stop, 0.0, run_time);
+            vector<string> shortest_path;
+            return make_tuple(shortest_path, 0.0, run_time, stop_pos_map);   
         };
 };
