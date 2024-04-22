@@ -24,8 +24,8 @@ class Transit {
     private:
         unordered_map<string, set<pair<string, int>>> routes; // Format: stopA -> set of <stopB, time>
         unordered_map<string, string> stop_id_map; // id -> name
-        unordered_map<string, string> stop_name_map; // name -> id
-        unordered_map<string, float> stop_time_map;
+        // unordered_map<string, string> stop_name_map; // name -> id
+        // unordered_map<string, float> stop_time_map;
         unordered_map<string, pair<double, double>> stop_pos_map; // id -> pair of <latitude, longitude>
 
     public:
@@ -56,8 +56,8 @@ class Transit {
 
                 // TODO: BUG because one stop_name can map to MULTIPLE stop_ids.
                 stop_id_map[stop_id] = stop_name;
-                stop_name_map[stop_name] = stop_id;
-                stop_pos_map[stop_id] = make_pair(stod(stop_lat), stod(stop_lon));
+                // stop_name_map[stop_name] = stop_id;
+                stop_pos_map[stop_name] = make_pair(stod(stop_lat), stod(stop_lon));
                 // cout << stop_id << ": " << stop_name << endl;
 
                 displayLoadingBar(currLine, 1505);
@@ -153,7 +153,12 @@ class Transit {
             return (hours * 3600) + (minutes * 60) + (seconds);
         }
 
-        void insertRoute(string& stopA, string& stopB, int& timeA, int& timeB) {
+        void insertRoute(string stopA, string stopB, int timeA, int timeB) {
+            // Fix: Since stop_name can map to multiple stop_id's, will now store the graph as
+            //      stop_name -> adjacents, instead of stop_id -> adjacents
+            stopA = getStopName(stopA);
+            stopB = getStopName(stopB);
+
             pair<string, int> route;
             route.first = stopB;
             route.second = timeB - timeA;
@@ -168,19 +173,19 @@ class Transit {
                         routes[stopA].erase(stopB_route);
                         routes[stopA].insert(route);
                     }
-                    stop_time_map[stopA] = float(timeA);
-                    stop_time_map[stopB] = float(timeB);
+                    // stop_time_map[stopA] = float(timeA);
+                    // stop_time_map[stopB] = float(timeB);
                     return;
                 }
             }
             
             // If no duplicate route found, add it to graph.
             routes[stopA].insert(route);
-            stop_time_map[stopA] = float(timeA);
-            stop_time_map[stopB] = float(timeB);
+            // stop_time_map[stopA] = float(timeA);
+            // stop_time_map[stopB] = float(timeB);
         }
 
-        set<pair<string, int>> getAdjacents(string& stop) {
+        set<pair<string, int>> getAdjacents(string stop) {
             return routes[stop];
         }
 
@@ -188,13 +193,13 @@ class Transit {
             return stop_id_map[stop_id];
         }
 
-        string getStopID(string stop_name) {
-            return stop_name_map[stop_name];
-        }
+        // string getStopID(string stop_name) {
+        //     return stop_name_map[stop_name];
+        // }
 
         void printRoutes() {
             for (auto each: routes) {
-                cout << getStopName(each.first) << " : ";
+                cout << each.first << " : ";
                 set<pair<string, int>> adjs = routes[each.first];
                 for (auto i: adjs) {
                     cout << "(" << i.first << " " << i.second << ")"<< " ";
@@ -229,8 +234,8 @@ class Transit {
 
             return false;
         }
-        bool stopExists(string& stop_name) {
-            return stop_name_map.find(stop_name) != stop_name_map.end();
+        bool stopExists(string stop_name) {
+            return routes.find(stop_name) != routes.end();
         }
 
         void updatePriority(unordered_set<string>& done, unordered_map<string, int>& distances, priority_queue<pair<int, string> , vector<pair<int, string>>, greater<pair<int, string>>>& minHeap) {
@@ -294,12 +299,12 @@ class Transit {
         }
 
         // get heuristic by using stop time to calculate how long it will take to get from start to end
-        float get_time_heuristic(string& start_stop, string& end_stop) {
-            return stop_time_map[end_stop] - stop_time_map[start_stop];
-        }
+        // float get_time_heuristic(string& start_stop, string& end_stop) {
+        //     return stop_time_map[end_stop] - stop_time_map[start_stop];
+        // }
 
         // get heuristic by using position (lat, lon) to calculate the manhattan distance or "L distance"
-        float get_pos_heuristic(string& start_stop, string& end_stop) {
+        float get_pos_heuristic(string start_stop, string end_stop) {
             // x -> longitude, y -> latitude
             float x1 = get<1>(stop_pos_map[start_stop]);
             float y1 = get<0>(stop_pos_map[start_stop]);
@@ -310,7 +315,7 @@ class Transit {
             return abs(x1 - x2) + abs(y1 - y2);
         }
 
-        string get_shortest_path(unordered_map<string, string>& preds, string& curr_stop, string& start_stop) {
+        string get_shortest_path(unordered_map<string, string>& preds, string curr_stop, string start_stop) {
             string shortest_path = curr_stop + " ";
             while (curr_stop != start_stop) {
                 shortest_path.append(preds[curr_stop] + " ");
@@ -324,7 +329,7 @@ class Transit {
         // TODO: A* Search Shortest Path Algorithm
         // Determines shortest route, then prints route and the time to perform the algorithm.
         // returns tuple<path, time, run_time>
-        tuple<string, float, chrono::microseconds> shortest_path_a_star(string& stopA, string& stopB) {
+        tuple<string, float, chrono::microseconds> shortest_path_a_star(string stopA, string stopB) {
             auto start = chrono::high_resolution_clock::now(); 
             int count = 0; // use count for tie breaker if something is already in the pq it takes precidence
             string start_stop = stopA;
