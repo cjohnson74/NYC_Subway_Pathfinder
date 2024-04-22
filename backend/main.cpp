@@ -88,6 +88,9 @@ int main() {
     // Create an instance of the HTTP server
     httplib::Server server;
 
+    // Serve static files from the "public" directory
+    server.set_mount_point("/", "frontend");
+
     // Define a POST request handler
     server.Post("/findShortestPathAStar", [&transit](const httplib::Request& req, httplib::Response& res) {
         handlePost(req, res, transit);
