@@ -27,7 +27,6 @@ class Transit {
         unordered_map<string, string> stop_name_map; // name -> id
         unordered_map<string, float> stop_time_map;
         unordered_map<string, pair<double, double>> stop_pos_map; // id -> pair of <latitude, longitude>
-        bool constructionComplete = false; // Flag to track transit construction status
 
     public:
         Transit() {
@@ -38,10 +37,10 @@ class Transit {
         void buildTransit(string& filepath_stops, string& filepath_times) {
             // 1. Read stops.txt and populate stop_id and stop_name maps.
             ifstream stops_file(filepath_stops);
-            std::ifstream file("transit_data/stops.txt");
-            if (!file.is_open()) {
+            if (!stops_file.is_open()) {
                 std::cerr << "Error opening file" << std::endl;
             }
+            
             string stop_id, stop_name, stop_lat, stop_lon, junk; // junk is for unneeded data
             int currLine = 1;
 
