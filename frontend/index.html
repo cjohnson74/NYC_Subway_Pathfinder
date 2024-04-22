@@ -18,17 +18,40 @@
         <label for="end">End:</label>
         <input type="text" id="end" placeholder="Enter end station">
         <button onclick="findShortestPath()">Find Shortest Path</button>
+        <button onclick="consructTranist()">Construct Transit</button>
     </div>
     <div id="map"></div>
 
     <script>
+        // Funciton to send HTTP request to the backend and construt transit object
+        function findShortestPath() {
+            var start = document.getElementById('start').value;
+            var end = document.getElementById('end').value;
+
+            // Send HTTP request to the backend
+            fetch('/constructTransit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ start: start, end: end })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data.res);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
         // Function to send HTTP request to the backend and display shortest path on the map
         function findShortestPath() {
             var start = document.getElementById('start').value;
             var end = document.getElementById('end').value;
 
             // Send HTTP request to the backend
-            fetch('/findShortestPathAStar', { // Use relative URL to accommodate different environments
+            fetch('/findShortestPath', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

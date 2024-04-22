@@ -36,10 +36,26 @@ This will remain rooted in the main function.
 */
 
 #include <iostream>
-
 #include "Transit.cpp"
 #include "include/httplib.h" // Include the httplib library
 #include "include/json.hpp"
+
+void constructTransit(const httplib::Request& req, httplib::Response& res, Transit& transit) {
+    // string STOPS_FILE = "mock_data/stops.txt"; // default: "transit_data/stops.txt"
+    string STOPS_FILE = "backend/transit_data/stops.txt";
+    // string STOP_TIMES_FILE = "mock_data/stop_times_debug.txt"; // default: "transit_data/stop_times.txt"
+    string STOP_TIMES_FILE = "backend/transit_data/stop_times.txt";
+
+    // Generate JSON response
+    nlohmann::json responseJson;
+
+    responseJson["data"] = "started building transit";
+
+    // Set response content type and body
+    res.set_content(responseJson.dump(), "application/json");
+
+    transit.buildTransit(STOPS_FILE, STOP_TIMES_FILE);
+}
 
 // Define a function to handle POST requests
 void handlePost(const httplib::Request& req, httplib::Response& res, Transit& transit) {
@@ -72,11 +88,6 @@ void handlePost(const httplib::Request& req, httplib::Response& res, Transit& tr
 }
 
 int main() {
-    // string STOPS_FILE = "mock_data/stops.txt"; // default: "transit_data/stops.txt"
-    string STOPS_FILE = "backend/transit_data/stops.txt";
-    // string STOP_TIMES_FILE = "mock_data/stop_times_debug.txt"; // default: "transit_data/stop_times.txt"
-    string STOP_TIMES_FILE = "backend/transit_data/stop_times.txt";
-
     // BELOW IS SERVER CODE
 
     // Getting port environment variable from Heroku
@@ -89,24 +100,22 @@ int main() {
     // Serve static files from the "public" directory
     server.set_mount_point("/", "frontend");
 
-     Transit transit;
+    Transit transit;
 
-    // POST request handler for A Star
-    server.Post("/findShortestPathAStar", [&transit](const httplib::Request& req, httplib::Response& res) {
-        handlePost(req, res, transit);
+    // POST request handler to initiate construction of transit
+    server.Post("/constructTransit", [&transit](const httplib::Request& req, httplib::Response& res) {
+        constructTransit(req, res, transit);
     });
 
-    // POST request handler for Dijkstra
-    server.Post("/findShortestPathDijkstra", [&transit](const httplib::Request& req, httplib::Response& res) {
+    // POST request handler for A Star
+    server.Post("/findShortestPath", [&transit](const httplib::Request& req, httplib::Response& res) {
         handlePost(req, res, transit);
-    }); 
+    });
 
     // Start the server and listen on port 8000
     server.listen("0.0.0.0", port);
 
     // ABOVE IS SERVER CODE
-
-    transit.buildTransit(STOPS_FILE, STOP_TIMES_FILE);
 
     // debugging
     transit.printRoutes();
