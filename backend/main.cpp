@@ -35,8 +35,9 @@ This will remain rooted in the main function.
 
 */
 
-#include "Transit.cpp"
 #include <iostream>
+
+#include "Transit.cpp"
 #include "include/httplib.h" // Include the httplib library
 #include "include/json.hpp"
 
@@ -80,6 +81,10 @@ int main() {
 
     // BELOW IS SERVER CODE
 
+    // Getting port environment variable from Heroku
+    const char* port_str = getenv("PORT");
+    int port = (port_str != nullptr) ? stoi(port_str) : 8080;
+
     // Create an instance of the HTTP server
     httplib::Server server;
 
@@ -94,7 +99,7 @@ int main() {
     });
 
     // Start the server and listen on port 8000
-    server.listen("localhost", 8000);
+    server.listen("0.0.0.0", port);
 
     // ABOVE IS SERVER CODE
 
