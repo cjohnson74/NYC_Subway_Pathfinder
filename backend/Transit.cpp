@@ -35,8 +35,8 @@ class Transit {
 
         // GTFS parsing of transit data & map population.
         void buildTransit() {
-            string filepath_stops = "backend/transit_data/stops.txt";
-            string filepath_times = "backend/transit_data/stop_times.txt";
+            string filepath_stops = "transit_data/stops.txt";
+            string filepath_times = "transit_data/stop_times.txt";
             // 1. Read stops.txt and populate stop_id and stop_name maps.
             ifstream stops_file(filepath_stops);
             if (!stops_file.is_open()) {
@@ -121,7 +121,7 @@ class Transit {
                 cout << "Reading line " << currLine << " of " << 554833 << "\r";
                 cout.flush();
             }
-            cout << endl << filepath_times << "file reading completed!" << endl;
+            cout << endl << filepath_times << " file reading completed!" << endl;
         }
 
         // aesthetic function that outputs a loading bar in CLI since it takes so long to read the stop_times.txt file

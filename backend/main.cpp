@@ -178,7 +178,7 @@ int main() {
         // Calculation & Output
         cout << endl;
         cout << "Fastest Route: " << "<insert path here>" << endl;
-        if (!shortest_a_star_path.empty()) {
+        if (get<0>(a_star_calc).empty()) {
             cout << "A* Fastest Route: Path does not exist" << endl;
         } else {
             cout << "A* Fastest Route: " << shortest_a_star_path << endl;
