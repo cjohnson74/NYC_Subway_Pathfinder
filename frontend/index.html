@@ -59,10 +59,10 @@
             .then(data => {
                 console.log(data.shortestPath);
                 // Display the shortest path on the map
-                if (shortestPath.length() == 0) {
+                if (data.shortestPath.length() == 0) {
                     console.log("Path does not exist.");
                 } else {
-                displayShortestPath(data.shortestPath);
+                    displayShortestPath(data.shortestPath);
                 }
             })
             .catch(error => {

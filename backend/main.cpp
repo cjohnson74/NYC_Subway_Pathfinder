@@ -87,10 +87,11 @@ void handlePost(const httplib::Request& req, httplib::Response& res, Transit& tr
     // Generate JSON response
     nlohmann::json responseJson;
     unordered_map<string, pair<double, double>> stop_pos_map = get<3>(a_star_res);
-    vector<pair<double, double>> stops_pos;
+    vector<string> stops_pos;
 
     for (auto stop : get<0>(a_star_res)) {
-        stops_pos.push_back(stop_pos_map[stop]);
+        cout << stop << ": " << stop_pos_map[stop].first << ", " << stop_pos_map[stop].second << endl;
+        stops_pos.push_back(to_string(stop_pos_map[stop].first) + ", " + to_string(stop_pos_map[stop].second));
     }
 
     responseJson["shortestPath"] = stops_pos;
