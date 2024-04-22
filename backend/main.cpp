@@ -54,31 +54,16 @@ void constructTransit(const httplib::Request& req, httplib::Response& res, Trans
     nlohmann::json responseJson;
     responseJson["res"] = "started building transit";
 
-    // Set response content type and body
-    res.set_content(responseJson.dump(), "application/json");
-
     // Start building transit in a separate thread to avoid blocking the request handler
-    std::thread transitBuilder([&transit, &STOPS_FILE, &STOP_TIMES_FILE]() {
+    std::thread transitBuilder([&transit, &STOPS_FILE, &STOP_TIMES_FILE, &res]() {
         transit.buildTransit(STOPS_FILE, STOP_TIMES_FILE);
+        // Once construction is complete, notify the client
+        nlohmann::json completeJson;
+        completeJson["constructionComplete"] = "transite construction completed";
+        res.set_content(completeJson.dump(), "application/json");
     });
 
     transitBuilder.detach(); // Detach the thread to let it run independently
-
-    // Send periodic updates to the client
-    while (true) {
-        // Check if transit construction is complete
-        if (transit.isConstructionComplete()) {
-            // Notify the client that transit construction is complete
-            responseJson["constructionComplete"] = "transite construction completed";
-            res.set_content(responseJson.dump(), "application/json");
-            break;
-        } else {
-            // Send a periodic update to the client
-            responseJson["constructionComplete"] = "building transit...";
-            res.set_content(responseJson.dump(), "application/json");
-            std::this_thread::sleep_for(std::chrono::seconds(5)); // Send updates every 5 seconds
-        }
-    }
 }
 
 // Define a function to handle POST requests
@@ -201,14 +186,14 @@ int main() {
         cout << "A* Search Algorithm runtime: " << get<2>(a_star_calc).count() << "microseconds" << endl;
         cout << endl;
 
-        // cout << "Exit application? (y to exit, any other character to find new route)" << endl;
-        // getline(cin, exit);
+        cout << "Exit application? (y to exit, any other character to find new route)" << endl;
+        getline(cin, exit);
 
-        // // Termination
-        // if (exit == "y") {
-        //     cout << "Exiting application..." << endl; 
-        //     break;
-        // }
+        // Termination
+        if (exit == "y") {
+            cout << "Exiting application..." << endl; 
+            break;
+        }
     }
     
     return 0;
