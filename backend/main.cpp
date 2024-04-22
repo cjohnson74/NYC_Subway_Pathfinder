@@ -69,11 +69,13 @@ void constructTransit(const httplib::Request& req, httplib::Response& res, Trans
         // Check if transit construction is complete
         if (transit.isConstructionComplete()) {
             // Notify the client that transit construction is complete
-            res.set_content("{\"constructionComplete\": \"transit construction completed\"}", "application/json");
+            responseJson["constructionComplete"] = "transite construction completed";
+            res.set_content(responseJson.dump(), "application/json");
             break;
         } else {
             // Send a periodic update to the client
-            res.set_content("{\"constructionComplete\": \"building transit...\"}", "application/json");
+            responseJson["constructionComplete"] = "building transit...";
+            res.set_content(responseJson.dump(), "application/json");
             std::this_thread::sleep_for(std::chrono::seconds(5)); // Send updates every 5 seconds
         }
     }
