@@ -1,1 +1,1 @@
-web: ./backend/main.cpp
+web: ./backend/myapp
