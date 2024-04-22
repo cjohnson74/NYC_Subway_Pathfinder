@@ -89,24 +89,24 @@ int main() {
     // Serve static files from the "public" directory
     server.set_mount_point("/", "frontend");
 
-    server.set_mount_point("/", "backend");
+     Transit transit;
 
-    Transit transit(STOPS_FILE, STOP_TIMES_FILE);
-
-    // Define a POST request handler
+    // POST request handler for A Star
     server.Post("/findShortestPathAStar", [&transit](const httplib::Request& req, httplib::Response& res) {
         handlePost(req, res, transit);
     });
 
-    // Define Post request handler for Dijkstra
+    // POST request handler for Dijkstra
     server.Post("/findShortestPathDijkstra", [&transit](const httplib::Request& req, httplib::Response& res) {
         handlePost(req, res, transit);
-    });
+    }); 
 
     // Start the server and listen on port 8000
     server.listen("0.0.0.0", port);
 
     // ABOVE IS SERVER CODE
+
+    transit.buildTransit(STOPS_FILE, STOP_TIMES_FILE);
 
     // debugging
     transit.printRoutes();

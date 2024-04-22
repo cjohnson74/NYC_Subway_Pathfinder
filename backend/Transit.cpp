@@ -34,7 +34,7 @@ class Transit {
         }
 
         // GTFS parsing of transit data & map population.
-        Transit(string& filepath_stops, string& filepath_times) {
+        void buildTransit(string& filepath_stops, string& filepath_times) {
             // 1. Read stops.txt and populate stop_id and stop_name maps.
             ifstream stops_file(filepath_stops);
             std::ifstream file("transit_data/stops.txt");
